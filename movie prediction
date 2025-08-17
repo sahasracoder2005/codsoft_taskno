@@ -1,0 +1,71 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+
+df = pd.read_csv('/content/IMDb_Movies_India.csv', encoding='latin1')
+
+print("📊 Dataset Preview:")
+print(df.head())
+
+df.dropna(subset=['Genre', 'Director', 'Actor 1', 'Rating'], inplace=True)
+
+df['Actors'] = df[['Actor 1', 'Actor 2', 'Actor 3']].fillna('').agg(' '.join, axis=1)
+
+le = LabelEncoder()
+df['genre_encoded'] = le.fit_transform(df['Genre'])
+df['director_encoded'] = le.fit_transform(df['Director'])
+
+tfidf = TfidfVectorizer(max_features=100)
+actors_tfidf = tfidf.fit_transform(df['Actors'])
+
+X = pd.concat([
+    df[['genre_encoded', 'director_encoded']].reset_index(drop=True),
+    pd.DataFrame(actors_tfidf.toarray())
+], axis=1)
+
+X.columns = X.columns.astype(str)
+
+y = df['Rating']
+
+print("\n🔀 Splitting Data...")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("\n🌲 Training Random Forest Regressor...")
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("\n✅ Model Evaluation:")
+print(f"🔸 Mean Squared Error: {mse:.2f}")
+print(f"🔸 R² Score: {r2:.2f}")
+
+plt.figure(figsize=(10,6))
+sns.scatterplot(x=y_test, y=y_pred, alpha=0.7, color='purple')
+plt.xlabel("Actual Ratings")
+plt.ylabel("Predicted Ratings")
+plt.title("🎬 Actual vs Predicted Movie Ratings")
+plt.grid(True)
+plt.show()
+
+importances = model.feature_importances_[:2]
+labels = ['Genre', 'Director']
+
+plt.figure(figsize=(6,4))
+sns.barplot(x=importances, y=labels, palette='magma')
+plt.title("📌 Feature Importance (Top Categorical Features)")
+plt.xlabel("Importance")
+plt.ylabel("Feature")
+plt.show()
+
+print("\n🎉 Prediction pipeline completed!")
