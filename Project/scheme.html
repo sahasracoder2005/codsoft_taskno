@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scheme Detail</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="light">
+<div class="app">
+  <button onclick="window.history.back()" class="backBtn">Back</button>
+  <div class="scheme-detail" id="schemeDetail"></div>
+</div>
+
+<script>
+const scheme = JSON.parse(localStorage.getItem('selectedScheme'));
+const container = document.getElementById('schemeDetail');
+
+if(scheme){
+  container.innerHTML = `
+    <h2>${scheme.title}</h2>
+    <p><strong>Short Info:</strong> ${scheme.short}</p>
+    <p><strong>Amount:</strong> ${scheme.amount}</p>
+    <p><strong>Duration:</strong> ${scheme.duration}</p>
+    <h4>Terms & Eligibility:</h4>
+    <p>${scheme.terms}</p>
+    <h4>Details:</h4>
+    <p>${scheme.details}</p>
+  `;
+} else {
+  container.innerHTML = "<p>No scheme selected!</p>";
+}
+</script>
+</body>
+</html>
